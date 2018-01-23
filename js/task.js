@@ -1,37 +1,35 @@
-function initialize() {
-    // localStorage.setItem("seenGithubUsersIDs", [1, 2, 3]);
+function initialize() {}
 
-    // localStorage.getItem("lastname");
-
-    // convert from strings
-
-}
-
+// no need putting the function in document.ready
 new BottomPopup();
 
 function BottomPopup() {
 
-    var popup, filteredUsers, listItems, loader, detailsScreenPopupTitle, detailsScreenFieldCompany, detailsScreenFieldImage, detailsScreenFieldRepos, detailsScreenFieldGists, popupBackButton;
-    var listView = document.getElementsByClassName('popup-list')[0];
+    var popup, filteredUsers, listItems, loader, detailsScreenPopupTitle, detailsScreenFieldCompany, detailsScreenFieldImage, detailsScreenFieldRepos, detailsScreenFieldGists, popupBackButton, popupHideButton, listView;
 
     function initInitialMarkup() {
-        // var initialMarkup = '<h1 id="title">Some Title</h1><span style="display:inline-block; width=100px;">Some arbitrary text</span>';
-        // appendHtml(document.body, initialMarkup);
+
+        appendHtml(document.body, getMarkup());
 
         popup = document.querySelector('.bottom-popup');
-        loader = document.getElementsByClassName('loading-overlay')[0];
 
-        detailsScreenPopupTitle = document.querySelector('.popup-title');
+        listView = document.querySelector('.popup-list');
+        popupTitle = document.querySelector('.popup-title');
         detailsScreenFieldCompany = document.querySelector('.popup-company-field');
         detailsScreenFieldImage = document.querySelector('.github-image');
         detailsScreenFieldGists = document.querySelector('.popup-gists-field');
         detailsScreenFieldRepos = document.querySelector('.popup-repos-field');
+        popupHideButton = document.querySelector('.popup-button-hide');
 
         popupBackButton = document.querySelector('.popup-back');
 
         popupBackButton.addEventListener('click', function () {
             popup.classList.remove('details-opened');
-            detailsScreenPopupTitle.innerHTML = detailsScreenPopupTitle.getAttribute('data-default-title');
+            popupTitle.innerHTML = popupTitle.getAttribute('data-default-title');
+        });
+
+        popupHideButton.addEventListener('click', function () {
+            popup.classList.add('hidden');
         });
 
     }
@@ -42,9 +40,11 @@ function BottomPopup() {
             var listItem = '<li class="popup-list-item" data-user-login="' + thisUser.login + '" data-user-id=' + '"' + thisUser.id + '"' + '><span class="item-number">' + thisUser.id + '.</span>' + ' ' + thisUser.login + '</li>';
             appendHtml(listView, listItem);
         }
+    }
 
+    function initListItemsListeners() {
         // assign listener to each item
-        listItems = document.getElementsByClassName('popup-list-item');
+        listItems = document.querySelectorAll('.popup-list-item');
         for (var i = 0; i < listItems.length; i++) {
             var thisItem = listItems[i];
             let thisUserLogin = thisItem.getAttribute('data-user-login');
@@ -60,18 +60,30 @@ function BottomPopup() {
         getSingleUser(userLogin);
     }
 
-    function renderDetailsScreen(userObject) {
-
-        detailsScreenPopupTitle.innerHTML = userObject.login;
-        detailsScreenFieldCompany.innerHTML = userObject.company;
+    function updateDetailsScreen(userObject) {
+        popupTitle.innerHTML = userObject.login;
+        if (userObject.company !== '' && userObject.company) {
+            detailsScreenFieldCompany.innerHTML = userObject.company;
+        } else {
+            detailsScreenFieldCompany.innerHTML = 'No company';
+        }
         detailsScreenFieldImage.setAttribute('src', userObject.avatar_url);
         detailsScreenFieldGists.innerHTML = userObject.public_gists;
         detailsScreenFieldRepos.innerHTML = userObject.public_repos;
 
-        popup.classList.add('details-opened');
+        updateStorage(userObject.id);
+        filteredUsers = filterUsers(filteredUsers, localStorage.getItem("seenGithubUsersIDs"));
+    }
 
-        // update storage
-
+    function updateStorage(seenUserId) {
+        var storageListString = localStorage.getItem("seenGithubUsersIDs");
+        var storageList = JSON.parse("[" + storageListString + "]");
+        if (storageListString) {
+            storageList.push(seenUserId);
+        } else {
+            storageList = [seenUserId];
+        }
+        localStorage.setItem("seenGithubUsersIDs", storageList);
     }
 
     function getSingleUser(username) {
@@ -79,13 +91,19 @@ function BottomPopup() {
         xhr.open('GET', 'https://api.github.com/users/' + username);
         xhr.onload = function () {
             if (xhr.status === 200) {
-                popup.classList.remove('loading');
                 var userObject = JSON.parse(xhr.response);
-                renderDetailsScreen(userObject);
+                updateDetailsScreen(userObject);
+
+                // small delay for better UI/UX
+                setTimeout(function () {
+                    popup.classList.remove('loading');
+                    popup.classList.add('details-opened');
+                    document.querySelector('[data-user-id="' + userObject.id + '"]').style.display = 'none';
+                }, 220);
             }
             else {
-                console.log("FAIL");
-                console.log(xhr);
+                alert("Ooops, sorry, something went wrong! \n\n" + xhr.response);
+                popup.classList.remove('loading');
             }
         };
         xhr.send();
@@ -99,10 +117,11 @@ function BottomPopup() {
                 var usersObject = JSON.parse(xhr.response);
                 filteredUsers = filterUsers(usersObject, localStorage.getItem("seenGithubUsersIDs"));
                 renderUserList(filteredUsers);
+                initListItemsListeners();
             }
             else {
-                console.log("FAIL");
-                console.log(xhr);
+                alert("Ooops, sorry, something went wrong! \n\n" + xhr.response);
+                popup.style.display = 'none';
             }
         };
         xhr.send();
@@ -131,6 +150,58 @@ function BottomPopup() {
         return newUsersObject;
     }
 
+    function getMarkup() {
+        var markup = '<div class="bottom-popup">' +
+            '<div class="popup-header">' +
+            '<span data-default-title="Github users" class="popup-title">Github users</span>' +
+            '<i class="fa fa-times popup-button-hide" aria-hidden="true"></i>' +
+            '</div >' +
+            '<div class="popup-views-wrapper">' +
+            '<div class="loading-overlay">' +
+            '<div class="sk-fading-circle">' +
+            '<div class="sk-circle1 sk-circle"></div>' +
+            '<div class="sk-circle2 sk-circle"></div>' +
+            '<div class="sk-circle3 sk-circle"></div>' +
+            '<div class="sk-circle4 sk-circle"></div>' +
+            '<div class="sk-circle5 sk-circle"></div>' +
+            '<div class="sk-circle6 sk-circle"></div>' +
+            '<div class="sk-circle7 sk-circle"></div>' +
+            '<div class="sk-circle8 sk-circle"></div>' +
+            '<div class="sk-circle9 sk-circle"></div>' +
+            '<div class="sk-circle10 sk-circle"></div>' +
+            '<div class="sk-circle11 sk-circle"></div>' +
+            '<div class="sk-circle12 sk-circle"></div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="popup-views">' +
+            '<div class="popup-view list-view">' +
+            '<ul class="popup-list">' +
+            '</ul>' +
+            '</div>' +
+            '<div class="popup-view details-view">' +
+            '<img class="github-image" alt="github image" />' +
+            '<div class="popup-description">' +
+            '<span>Company</span>' +
+            '<span class="popup-company-field"></span>' +
+            '</div>' +
+            '<div class="popup-description-bottom">' +
+            '<div class="description-two-rows">' +
+            '<span>Repos</span>' +
+            '<span class="popup-number popup-repos-field"></span>' +
+            '</div>' +
+            '<div class="description-two-rows">' +
+            '<span>Gists</span>' +
+            '<span class="popup-number popup-gists-field"></span>' +
+            '</div>' +
+            '</div>' +
+            '<i class="icon-arrow-right popup-back" aria-hidden="true"></i>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div >';
+        return markup;
+    }
+
     /* Initialize
    * ------------------------------------------------------ */
 
@@ -144,7 +215,6 @@ function BottomPopup() {
 }
 
 function appendHtml(el, str) {
-    console.log("append");
     var div = document.createElement('div');
     div.innerHTML = str;
     while (div.children.length > 0) {

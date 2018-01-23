@@ -112,6 +112,51 @@
     display: inline-block;
     transform: rotate(180deg);
     font-size: 25px;
+    text-align: left;
+}
+
+.github-image {
+    height: 156px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 18px;
+}
+
+.popup-description {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.popup-number {
+    font-weight: bold;
+    display: block;
+    line-height: 1.5;
+}
+
+.popup-description-bottom {
+    display: -webkit-flex;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.popup-description-bottom .description-two-rows {
+    text-align: center
+}
+
+.popup-company-field {
+    display: block;
+    line-height: 1.5;
+    font-weight: bold;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 90%;
+    margin: 0 auto;
+}
+
+.popup-description-bottom .popup-description {
+    float: left;
 }
 
 /* loading animation keyframe  */
