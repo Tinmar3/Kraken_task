@@ -1,35 +1,51 @@
-function initialize() {}
-
-// no need putting the function in document.ready
+// no need putting the function in document.ready as it needs to be loaded asynchronously when page starts to load
 new BottomPopup();
+
+// localStorage.removeItem("seenGithubUsersIDs");
 
 function BottomPopup() {
 
-    var popup, filteredUsers, listItems, loader, detailsScreenPopupTitle, detailsScreenFieldCompany, detailsScreenFieldImage, detailsScreenFieldRepos, detailsScreenFieldGists, popupBackButton, popupHideButton, listView;
+    var filteredUsers;
+    var popup, popupTitle, popupHeader, listView, detailsScreenFieldCompany, detailsScreenFieldImage, detailsScreenFieldRepos, detailsScreenFieldGists, backButton, hideButton;
+
+    function User(id, loginName, company, avatarUrl, repos, gists) {
+        this.id = id;
+        this.loginName = loginName;
+        this.company = company || 'No company';
+        this.avatarUrl = avatarUrl;
+        this.repos = repos;
+        this.gists = gists;
+    }
 
     function initInitialMarkup() {
 
         appendHtml(document.body, getMarkup());
 
         popup = document.querySelector('.bottom-popup');
-
-        listView = document.querySelector('.popup-list');
         popupTitle = document.querySelector('.popup-title');
+        popupHeader = document.querySelector('.popup-header');
+        listView = document.querySelector('.popup-list');
         detailsScreenFieldCompany = document.querySelector('.popup-company-field');
         detailsScreenFieldImage = document.querySelector('.github-image');
         detailsScreenFieldGists = document.querySelector('.popup-gists-field');
         detailsScreenFieldRepos = document.querySelector('.popup-repos-field');
-        popupHideButton = document.querySelector('.popup-button-hide');
+        hideButton = document.querySelector('.popup-button-hide');
+        backButton = document.querySelector('.popup-back');
 
-        popupBackButton = document.querySelector('.popup-back');
-
-        popupBackButton.addEventListener('click', function () {
+        backButton.addEventListener('click', function () {
             popup.classList.remove('details-opened');
             popupTitle.innerHTML = popupTitle.getAttribute('data-default-title');
         });
 
-        popupHideButton.addEventListener('click', function () {
+        hideButton.addEventListener('click', function (e) {
+            e.stopPropagation();
             popup.classList.add('hidden');
+        });
+
+        popupHeader.addEventListener('click', function () {
+            if (popup.classList.contains('hidden')) {
+                popup.classList.remove('hidden');
+            }
         });
 
     }
@@ -44,7 +60,7 @@ function BottomPopup() {
 
     function initListItemsListeners() {
         // assign listener to each item
-        listItems = document.querySelectorAll('.popup-list-item');
+        var listItems = document.querySelectorAll('.popup-list-item');
         for (var i = 0; i < listItems.length; i++) {
             var thisItem = listItems[i];
             let thisUserLogin = thisItem.getAttribute('data-user-login');
@@ -60,30 +76,14 @@ function BottomPopup() {
         getSingleUser(userLogin);
     }
 
-    function updateDetailsScreen(userObject) {
-        popupTitle.innerHTML = userObject.login;
-        if (userObject.company !== '' && userObject.company) {
-            detailsScreenFieldCompany.innerHTML = userObject.company;
-        } else {
-            detailsScreenFieldCompany.innerHTML = 'No company';
-        }
-        detailsScreenFieldImage.setAttribute('src', userObject.avatar_url);
-        detailsScreenFieldGists.innerHTML = userObject.public_gists;
-        detailsScreenFieldRepos.innerHTML = userObject.public_repos;
-
-        updateStorage(userObject.id);
+    function updateDetailsScreen(user) {
+        popupTitle.innerHTML = user.loginName;
+        detailsScreenFieldCompany.innerHTML = user.company;
+        detailsScreenFieldImage.setAttribute('src', user.avatarUrl);
+        detailsScreenFieldGists.innerHTML = user.gists;
+        detailsScreenFieldRepos.innerHTML = user.repos;
+        updateStorage(user.id);
         filteredUsers = filterUsers(filteredUsers, localStorage.getItem("seenGithubUsersIDs"));
-    }
-
-    function updateStorage(seenUserId) {
-        var storageListString = localStorage.getItem("seenGithubUsersIDs");
-        var storageList = JSON.parse("[" + storageListString + "]");
-        if (storageListString) {
-            storageList.push(seenUserId);
-        } else {
-            storageList = [seenUserId];
-        }
-        localStorage.setItem("seenGithubUsersIDs", storageList);
     }
 
     function getSingleUser(username) {
@@ -91,14 +91,14 @@ function BottomPopup() {
         xhr.open('GET', 'https://api.github.com/users/' + username);
         xhr.onload = function () {
             if (xhr.status === 200) {
-                var userObject = JSON.parse(xhr.response);
-                updateDetailsScreen(userObject);
-
-                // small delay for better UI/UX
+                var rsp = JSON.parse(xhr.response);
+                var user = new User(rsp.id, rsp.login, rsp.company, rsp.avatar_url, rsp.public_repos, rsp.public_gists);
+                updateDetailsScreen(user);
+                // small delay for better UI/UX:
                 setTimeout(function () {
                     popup.classList.remove('loading');
                     popup.classList.add('details-opened');
-                    document.querySelector('[data-user-id="' + userObject.id + '"]').style.display = 'none';
+                    document.querySelector('[data-user-id="' + user.id + '"]').style.display = 'none';
                 }, 220);
             }
             else {
@@ -129,25 +129,21 @@ function BottomPopup() {
 
     function filterUsers(responseObject, seenUsers) {
         var seenUsersList = JSON.parse("[" + seenUsers + "]");
-        var newUsersObject = [];
-        for (var key in responseObject) {
-            var thisUserObject = responseObject[key];
-            var isSeenCheck = false;
-            for (var i = 0; i < seenUsersList.length; i++) {
-                if (thisUserObject.id === seenUsersList[i]) {
-                    // check if ID of an item is saved in storage seen list
-                    isSeenCheck = true;
-                    break;
-                }
-                else {
-                    isSeenCheck = false;
-                }
-            }
-            if (!isSeenCheck) {
-                newUsersObject.push(thisUserObject);
-            }
-        }
+        var newUsersObject = responseObject.filter(function (obj) {
+            return this.indexOf(obj.id) < 0;
+        }, seenUsersList);
         return newUsersObject;
+    }
+
+    function updateStorage(seenUserId) {
+        var storageListString = localStorage.getItem("seenGithubUsersIDs");
+        var storageList = JSON.parse("[" + storageListString + "]");
+        if (storageListString) {
+            storageList.push(seenUserId);
+        } else {
+            storageList = [seenUserId];
+        }
+        localStorage.setItem("seenGithubUsersIDs", storageList);
     }
 
     function getMarkup() {
@@ -221,5 +217,3 @@ function appendHtml(el, str) {
         el.appendChild(div.children[0]);
     }
 }
-
-$(document).ready(initialize);

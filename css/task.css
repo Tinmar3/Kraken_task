@@ -1,12 +1,21 @@
 .bottom-popup {
+    -webkit-transition: all 0.3s ease-in-out 0.45s;
+    transition: all 0.3s ease-in-out 0.45s;
     position: fixed;
-    bottom: 42px;
-    right: 42px;
+    bottom: 30px;
+    right: 105px;
     z-index: 500;
     width: 270px;
 }
 
+.hidden.bottom-popup {
+    width: 170px;
+    cursor: pointer;
+}
+
 .popup-header {
+    -webkit-transition: all 0.3s ease-in-out 0.5s;
+    transition: all 0.3s ease-in-out 0.5s;
     display: -webkit-flex;
     display: flex;
     align-items: center;
@@ -14,6 +23,10 @@
     padding: 12px 15px;
     overflow: hidden;
     border-radius: .5rem .5rem 0 0;
+}
+
+.hidden .popup-header {
+    border-radius: .5rem;
 }
 
 .popup-title {
@@ -25,24 +38,47 @@
 }
 
 .popup-button-hide {
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
     cursor: pointer;
     margin-left: auto;
     display: block;
+    visibility: visible;
+    opacity: 1;
+}
+
+.hidden .popup-button-hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .popup-views-wrapper {
     background-color: #FFFFFF;
     border: 2px solid #24292e;
+    border-top: none;
     border-radius: 0 0 .5rem .5rem;
     overflow: hidden;
     position: relative;
+    border-width: 2px;
+}
+
+.hidden .popup-views-wrapper {
+    -webkit-transition: border-width 0.3s ease-in-out 0.2s;
+    transition: border-width 0.3s ease-in-out 0.2s;
+    border-width: 0px;
 }
 
 .popup-views {
-    -webkit-transition: all 0.3s ease-in-out;
-    transition: all 0.3s ease-in-out;
+    -webkit-transition: all 0.5s ease-in-out;
+    transition: all 0.5s ease-in-out;
     width: 540px;
     overflow: hidden;
+    max-height: 374px;
+}
+
+.hidden .popup-views {
+    max-height: 0;
 }
 
 .details-opened .popup-views {
@@ -158,6 +194,7 @@
 .popup-description-bottom .popup-description {
     float: left;
 }
+
 
 /* loading animation keyframe  */
 
