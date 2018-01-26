@@ -15,7 +15,7 @@ Implement your solution in the files given below.
 ## Design
 ### Styles
 Style specification is given poorly on purpose. You can freely apply custom design or slice the provided images. 
-XXX You can reuse existing css classes.
+You can reuse existing css classes.
 
 #### Header   
 -    background-color: #24292e    
@@ -62,7 +62,3 @@ You can use any browser method for storing data.
 
 ##    Global Limitations
 Usage of any additional libraries is forbidden.
-
-// NOTES
-
- - reusable classes
