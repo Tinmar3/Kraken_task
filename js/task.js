@@ -157,7 +157,7 @@ function BottomPopup() {
     function getMarkup() {
         var markup = '<div class="bottom-popup">' +
             '<div class="popup-header">' +
-            '<span data-default-title="Github users" class="popup-title">Github users</span>' +
+            '<span data-default-title="Github Users" class="popup-title">Github Users</span>' +
             '<i class="fa fa-times popup-button-hide" aria-hidden="true"></i>' +
             '</div >' +
             '<div class="popup-views-wrapper">' +
