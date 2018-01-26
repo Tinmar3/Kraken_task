@@ -1,11 +1,14 @@
-// no need putting the function in document.ready as it needs to be loaded asynchronously when page starts to load
-new BottomPopup();
+// I've used some newer JS functions, like 'querySelector', 'filter', and I would usually polyfill them in separate file for better browser support.
+// No need putting the function in document.ready as it needs to be loaded asynchronously when page starts to load.
 
-// localStorage.removeItem("seenGithubUsersIDs");
+// localStorage.removeItem("seenGithubUsersIDs"); // for reseting a storage
+
+new BottomPopup();
 
 function BottomPopup() {
 
     var filteredUsers;
+    var viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
     var popup, popupTitle, popupHeader, listView, detailsScreenFieldCompany, detailsScreenFieldImage, detailsScreenFieldRepos, detailsScreenFieldGists, backButton, hideButton;
 
     function User(id, loginName, company, avatarUrl, repos, gists) {
@@ -47,6 +50,11 @@ function BottomPopup() {
                 popup.classList.remove('hidden');
             }
         });
+
+        if (viewportWidth < 993) {
+            // hidden on the load, for smaller devices
+            popup.classList.add('hidden');
+        }
 
     }
 

@@ -195,6 +195,21 @@
     float: left;
 }
 
+@media (max-width: 768px) {
+    .bottom-popup {
+        bottom: 0;
+        right: 75px;
+    }
+}
+
+@media (max-width: 400px) {
+    .bottom-popup {
+        right: 25px;
+    }
+    .bottom-popup.hidden {
+        right: 75px;
+    }
+}
 
 /* loading animation keyframe  */
 
